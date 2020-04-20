@@ -8,7 +8,7 @@ void yyerror(char *s);
 %token NUMBER
 %left '+' '-'
 %left '*' '/'
-
+%left UNARYMINUS 
 %%
 
 list :  /* nothing */
@@ -17,6 +17,7 @@ list :  /* nothing */
      ;
 
 expr:   NUMBER		{ $$ = $1; }
+      | '-' expr %prec UNARYMINUS { $$ = -$2; }
       | expr '+' expr 	{ $$ = $1 + $3; }
       | expr '-' expr 	{ $$ = $1 - $3; }
       | expr '*' expr 	{ $$ = $1 * $3; }
