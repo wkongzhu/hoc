@@ -18,7 +18,7 @@ typedef union Datum{ //解释器的堆栈元素类型
 } Datum;
 extern Datum pop();
 
-typedef int (*Inst)(); // 函数指针作为机器指令, 执行机器指令就是调用函数
+typedef void (*Inst)(); // 函数指针作为机器指令, 执行机器指令就是调用函数
 
 #define STOP (Inst)0 // 看到指针为0，停止执行
 

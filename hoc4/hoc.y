@@ -9,6 +9,8 @@ void execerror(char *s, char *t);
 void fpecatch();
 extern void init();
 extern Inst* code(Inst f);
+extern void execute(Inst *p);
+extern void initcode();
 %}
 
 %union {

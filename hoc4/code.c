@@ -1,5 +1,9 @@
+#include <stdio.h>
+#include <math.h>
 #include "hoc.h"
 #include "y.tab.h"
+
+void execerror(char *s, char *t);
 
 #define NSTACK 256
 static Datum stack[NSTACK]; // 解释器的栈

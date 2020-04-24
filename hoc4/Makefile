@@ -7,7 +7,7 @@ hoc4 : $(OBJS)
 
 hoc.o code.o init.o symbol.o : hoc.h
 
-code.o init.o symbol.o : hoc.h x.tab.h
+code.o init.o symbol.o : x.tab.h
 
 x.tab.h : y.tab.h
 	-cmp -s x.tab.h y.tab.h || cp y.tab.h x.tab.h
