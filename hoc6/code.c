@@ -258,13 +258,13 @@ void ifcode() {
 }
 
 void prstr() {
-  printf("%s", (char*) *pc++);
+  printf("%s\n", (char*) *pc++);
 }
 
 void prexpr() {
   Datum d;
   d = pop();
-  printf("%.8g ", d.val);
+  printf("%.8g\n", d.val);
 }
 
 void define(Symbol *sp) {
