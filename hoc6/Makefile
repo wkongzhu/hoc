@@ -14,7 +14,13 @@ x.tab.h : y.tab.h
 clean:
 	rm -f *.o [xy].tab.* hoc*.exe
 
-t_fac: hoc6
-	hoc6 fac
-t_fib: hoc6
-	hoc6 fib
+t_fac: fac hoc6
+	hoc6 $<
+t_fib: fib hoc6
+	hoc6 $<
+t_stirl: stirling hoc6
+	hoc6 $<
+t_ack: ack hoc6
+	hoc6 $<
+test: fac fib stirling ack
+	hoc6 $^

@@ -7,7 +7,7 @@ extern int moreinput();
 
 void execerror(char *s, char *t);
 
-#define NSTACK 256
+#define NSTACK 4096
 static Datum stack[NSTACK]; // 解释器的栈
 static Datum *stackp; // 栈顶指针，指向下一个空闲可用的节点
 
@@ -26,7 +26,7 @@ typedef struct Frame { // proc/func call stack frame
   int nargs; // 参数个数
 } Frame;
 
-#define NFRAME 100
+#define NFRAME 1024
 Frame frame[NFRAME];
 Frame *fp;
 
@@ -327,7 +327,7 @@ void varread() {
   Datum d;
   Symbol *var = (Symbol*) *pc++;
 Again:
-  switch(fscanf(fin, "%1f", &var->u.val)) {
+  switch(fscanf(fin, "%lf", &var->u.val)) {
   case EOF:
     if ( moreinput() )     goto Again;
     d.val = var->u.val = 0.0;

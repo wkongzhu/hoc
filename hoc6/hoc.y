@@ -110,7 +110,7 @@ expr:   	NUMBER		{ $$ = code2(constpush, (Inst)$1); }
 prlist:		expr		{ code(prexpr); }
 	|	STRING		{ $$ = code2(prstr, (Inst)$1); }
 	|	prlist ',' expr { code(prexpr); }
-	|	prlist ',' STRING { code2(prexpr, (Inst)$3); }
+	|	prlist ',' STRING { code2(prstr, (Inst)$3); }
 	;
 DEF:		FUNC procname { $2->type = FUNCTION; indef = 1; }
 		'(' ')' stmt { code(procret); define($2); indef = 0; }
