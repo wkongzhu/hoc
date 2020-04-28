@@ -141,9 +141,9 @@ int gargc;
 int c;  // 输入字符 lex()/warning()使用
 
 int follow(int expect, int ifyes, int ifno) {
-    int c = getchar();
+    int c = getc(fin);
     if(c == expect)   return ifyes;
-    else { ungetc(c, stdin); return ifno; }
+    else { ungetc(c, fin); return ifno; }
 }
 
 int backslash(int c) {
@@ -158,14 +158,14 @@ int backslash(int c) {
 
 int yylex()
 {
-  while( (c=getchar() )==' ' || c== '\t') ;
+  while( (c=getc(fin) )==' ' || c== '\t') ;
 
   if( c== EOF ) return 0;
 
   if( c== '.' || isdigit(c) ) {
       double d;
-    ungetc(c, stdin);
-    scanf("%lf", &d);
+    ungetc(c, fin);
+    fscanf(fin, "%lf", &d);
     yylval.sym = install("", NUMBER, d); // Symbol增加了一个NUMBER类型
     return NUMBER;
   }
@@ -174,8 +174,8 @@ int yylex()
       char sbuf[100], *p = sbuf;
       do {
 	  *p++ = c;
-      } while( (c=getchar()) != EOF && isalnum(c) ); // 后面的字符可以使字母或者数字
-      ungetc(c, stdin);
+      } while( (c=getc(fin)) != EOF && isalnum(c) ); // 后面的字符可以使字母或者数字
+      ungetc(c, fin);
       *p = '\0'; // c语言字符串以\0结尾
       if( (s=lookup(sbuf) ) == 0) s = install(sbuf, UNDEF, 0.0); // 0.0没有意义，仅仅为了占位置。
       yylval.sym = s;

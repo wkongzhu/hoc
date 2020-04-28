@@ -1,3 +1,5 @@
 func fac() {
      if($1 <= 0) return 1 else return $1 * fac($1 - 1)
 }
+print "fac(10)=, 期望是362889"
+print fac(10)

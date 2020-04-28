@@ -9,3 +9,5 @@ proc fib() {
   }
   print "\n"
 }
+
+fib(20)
