@@ -40,6 +40,10 @@ static struct {
 		"else",		ELSE,
 		"while",	WHILE,
 		"print",	PRINT,
+		"return",	RETURN,
+		"proc",		PROC,
+		"func",		FUNC,
+		"read",		READ,
 		0, 0
 };
 void init() {

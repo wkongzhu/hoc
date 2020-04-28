@@ -1,9 +1,9 @@
 YFLAGS := -d
 OBJS := hoc.o init.o math.o symbol.o code.o
-CC := gcc
+CC := gcc 
 
 hoc6 : $(OBJS)
-	gcc $(OBJS) -lm -o $@
+	$(CC) $(OBJS)  -o $@
 
 hoc.o code.o init.o symbol.o : hoc.h
 

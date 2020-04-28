@@ -28,5 +28,6 @@ extern Inst prog[], *progp; // 指令代码数组
 
 extern void eval(), add(), sub(), mul(), zdiv(), negate(), power(),
   assign(), bltin(), varpush(), constpush(), print();
-extern void prexpr(), gt(), lt(), eq(), ge(), le(), ne(), and(), or(),
-  not(), ifcode(), whilecode();
+extern void prexpr(), prstr(),  gt(), lt(), eq(), ge(), le(), ne(), and(), or(),
+  not(), ifcode(), whilecode(), call(), arg(), argassign(), funcret(), procret(),
+  varread();

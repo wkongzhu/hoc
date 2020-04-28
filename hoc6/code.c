@@ -3,6 +3,7 @@
 #include "hoc.h"
 #include "y.tab.h"
 extern FILE *fin;
+extern int moreinput();
 
 void execerror(char *s, char *t);
 
@@ -59,7 +60,7 @@ Inst *code(Inst f){
 void execute(Inst *p) {
   pc = p;
   while(*pc != STOP && !returning) {
-    (* (*pc++) ) ();   // 先取pc指向的函数指针，然后pc=pc+1, 然后调用取出的函数指针指向的函数
+    (* (*pc++) ) ();   // 先取pc指向的函数指针, 然后pc=pc+1, 最后调用取出的函数指针指向的函数
   }
 }
 
@@ -256,10 +257,14 @@ void ifcode() {
     pc = *((Inst**)(savepc+2));
 }
 
+void prstr() {
+  printf("%s", (char*) *pc++);
+}
+
 void prexpr() {
   Datum d;
   d = pop();
-  printf("%.8g\n", d.val);
+  printf("%.8g ", d.val);
 }
 
 void define(Symbol *sp) {
@@ -271,11 +276,19 @@ void call() {
   Symbol *sp = (Symbol*)pc[0]; // function的符号表入口
   if(fp++ >= &frame[NFRAME-1])   execerror(sp->name, "call nested too deeply");
   fp->sp = sp;
-  fp->nargs = (int) pc[1]; //指针和整数类型占据的内存大小一样
+  fp->nargs = (long) pc[1]; //指针和整数类型占据的内存大小一样, 64bit OS用64bit整数long,32bit OS用32bit整数int
   fp->retpc = pc + 2;
   fp->argn = stackp - 1;
   execute(sp->u.defn);
   returning = 0;
+}
+
+void ret() {
+  int i;
+  for(i=0; i < fp->nargs; i++)    pop();
+  pc = (Inst*) fp->retpc;
+  --fp;
+  returning = 1;
 }
 
 void funcret() {
@@ -291,16 +304,8 @@ void procret() {
   ret();
 }
 
-void ret() {
-  int i;
-  for(i=0; i < fp->nargs; i++)    pop();
-  pc = (Inst*) fp->retpc;
-  --fp;
-  returning = 1;
-}
-
 double *getarg() { // 返回第nargs个参数的指针, 用指针的原因是为了外部修改
-  int nargs = (int) *pc++;
+  long nargs = (long) *pc++;  // 64bit OS使用64bit整数类型long
   if(nargs > fp->nargs)  execerror(fp->sp->name, "not enough arguments");
   return & fp->argn[nargs - fp->nargs].val;
 }
@@ -316,16 +321,6 @@ void argassign() {
   d = pop();
   push(d);
   *getarg() = d.val;  //外部修改来赋值参数
-}
-
-void prstr() {
-  printf("%s", (char*) *pc++);
-}
-
-void prexpr() {
-  Datum d;
-  d = pop();
-  printf("%.8g ", d.val);
 }
 
 void varread() {

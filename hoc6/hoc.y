@@ -3,21 +3,26 @@
 #include "hoc.h"
 #define code2(c1, c2)		code(c1);code(c2)
 #define code3(c1, c2, c3)	code(c1);code(c2);code(c3)
+int indef;
 int yylex();
 void yyerror(char *s);
 void execerror(char *s, char *t);
 void fpecatch();
 void defnonly(char *s);
+
+extern Inst *progbase;
 extern void init();
 extern Inst* code(Inst f);
 extern void execute(Inst *p);
 extern void initcode();
+extern void define(Symbol *sp);
 %}
 
 %union {
     Inst   *inst;  // 指令存放地址
     Symbol *sym;
-    int     narg;  // 参数个数
+    long     narg;  /* 参数个数.  需要和指针类型匹配。不同的操作系统，指针大小不一样
+		       64bit OS使用long类型，如果是32bit OS, 使用int类型。*/
 }
 %token	<sym>		NUMBER VAR BLTIN UNDEF PRINT WHILE IF ELSE STRING
 %token	<sym>		FUNCTION PROCEDURE RETURN FUNC PROC READ
@@ -49,7 +54,7 @@ asgn:		VAR '=' expr    { $$=$3; code3(varpush, (Inst) $1, assign); }
 stmt:		expr       { code((Inst) pop); }
 	|	RETURN      { defnonly("return"); code(procret); }
 	|	RETURN expr { defnonly("return"); code(funcret); $$ = $2; }
-	|	PROCEDURE begin '(' arglist ')' { $$=$2; code3(call, (Inst)$1, (Inst)$4); }
+	|	PROCEDURE begin '(' arglist ')' { $$=$2; code3(call, (Inst)$1, (Inst)$4); } //进程调用
 	|	PRINT prlist { $$ = $2; }
 	|	PRINT expr { code(prexpr); $$ = $2; }
 	|	while cond stmt end {
@@ -70,7 +75,7 @@ while:		WHILE { $$ = code3(whilecode, STOP, STOP); }
 	;
 if:		IF  { $$ = code(ifcode); code3(STOP, STOP, STOP); }
 	;
-begin:		/*nothing*/ { $$ = progp };
+begin:		/*nothing*/ { $$ = progp; };
 	;
 end:		/*nothing*/ { code(STOP); $$ = progp; }
 	;
@@ -82,7 +87,7 @@ expr:   	NUMBER		{ $$ = code2(constpush, (Inst)$1); }
 	|	VAR		{ $$ = code3(varpush, (Inst)$1, eval); }
 	|	ARG             { defnonly("$"); $$ = code2(arg, (Inst)$1); }
 	|	asgn
-	|	FUNCTION begin '(' arglist ')' { $$ = $2; code3(call, (Inst)$1, (Inst)$4); }
+	|	FUNCTION begin '(' arglist ')' { $$ = $2; code3(call, (Inst)$1, (Inst)$4); } //函数调用
 	|	READ '(' VAR ')' { $$ = code2(varread, (Inst)$3); }	       	       
 	|	BLTIN '(' expr ')'  { $$ = $3; code2( bltin, (Inst)$1->u.ptr ); }
 	| '-' 	expr %prec UNARYMINUS { $$ = $2; code(negate); }
@@ -112,7 +117,7 @@ defn:		FUNC procname { $2->type = FUNCTION; indef = 1; }
 	|	PROC procname { $2->type = PROCEDURE; indef = 1; }
 		'(' ')' stmt { code(procret); define($2); indef = 0; }
 	;
-procname:	VAR
+procname:	VAR     // 刚开始返回VAR，经过defn规约之后变成FUNCTION/PROCEDURE类型
 	|	FUNCTION
 	|	PROCEDURE
 	;
@@ -129,11 +134,11 @@ arglist:	 /*nothing*/      { $$ = 0; }
 jmp_buf begin;
 char *progname;
 int lineno = 1;
-int indef;
 char *infile;
 FILE *fin;
 char **gargv;
 int gargc;
+int c;  // 输入字符 lex()/warning()使用
 
 int follow(int expect, int ifyes, int ifno) {
     int c = getchar();
@@ -153,7 +158,6 @@ int backslash(int c) {
 
 int yylex()
 {
-  int c;
   while( (c=getchar() )==' ' || c== '\t') ;
 
   if( c== EOF ) return 0;
@@ -197,11 +201,10 @@ int yylex()
       }
       *p = 0; // 用0取代"，代表字符串结束
       yylval.sym = (Symbol*) emalloc(strlen(sbuf)+1);
-      strcpy(yylval.sym, sbuf);
+      strcpy((char*)yylval.sym, sbuf);
       return STRING;
   }
-  //  if( c=='\n' ) lineno++;
-  //  return c;
+
   switch(c) {
   case '>' : return follow('=', GE, GT);
   case '<' : return follow('=', LE, LT);
@@ -214,23 +217,54 @@ int yylex()
   }
 }
 
+void run() {
+    setjmp(begin);
+    signal(SIGFPE, fpecatch);
+    for(initcode(); yyparse(); initcode())
+	execute(progbase);
+}
+
+int moreinput() {
+    if(gargc-- <= 0)  return 0;
+    if(fin && fin != stdin)  fclose(fin);
+    infile = *gargv++;
+    lineno = 1;
+    if( strcmp(infile, "-") == 0 ) {
+	fin = stdin;
+	infile = 0;
+    } else if( (fin=fopen(infile, "r")) == NULL ) {
+	fprintf(stderr, "%s: can't open %s\n", progname, infile);
+	return moreinput();
+    }
+    return 1;
+}
 
 int main(int argc, char *argv[])
 {
-	progname = argv[0];
-	init();
-	setjmp(begin);
-	signal(SIGFPE, fpecatch);
-	for(initcode(); yyparse(); initcode())  execute(prog);
-	return	0;
+    progname = argv[0];
+    if(argc == 1) { // 没有参数，输入来自终端
+	static char *stdinonly[] = { "-" };
+	gargv = stdinonly;
+	gargc = 1;
+    } else {
+	gargv = argv + 1;
+	gargc = argc - 1;
+    }
+    init();
+    while( moreinput() )   run();
+    return	0;
 }
 
 
 void warning(char *s, char *t) {
   fprintf(stderr, "%s: %s", progname, s);
   if(t)
-	fprintf(stderr, " %s", t);
+      fprintf(stderr, " %s", t);
+  if(infile)
+      fprintf(stderr, " in %s", infile);
   fprintf(stderr, " near line %d\n", lineno);
+  while( c != '\n' && c != EOF)  c = getc(fin); // 忽略一整行
+  if(c=='\n')  lineno++;
 }
 
 void yyerror(char *s) {
