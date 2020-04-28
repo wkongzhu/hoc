@@ -268,7 +268,7 @@ void prexpr() {
 }
 
 void define(Symbol *sp) {
-  sp->u.defn = (Inst)progbase;
+  sp->u.defn = progbase;
   progbase = progp;
 }
 

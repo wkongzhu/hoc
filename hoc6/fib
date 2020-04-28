@@ -7,7 +7,7 @@ proc fib() {
     b = a+b
     a = c
   }
-  print "\n"
 }
 
-fib(20)
+print "小于100的斐波那契数列:"
+fib(100)

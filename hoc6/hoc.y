@@ -42,7 +42,7 @@ extern void define(Symbol *sp);
 
 list:  /* 	nothing */
 	| 	list '\n'
-	|	list defn '\n' // do nothing
+	|	list DEF '\n' // do nothing
 	|	list asgn '\n'  { code2((Inst)pop, STOP); return 1;} // yyparse()返回之后，才开始执行指令数组
 	|	list stmt '\n'  { code(STOP); return 1;}
 	| 	list expr '\n'  { code2(print, STOP); return 1; }
@@ -112,7 +112,7 @@ prlist:		expr		{ code(prexpr); }
 	|	prlist ',' expr { code(prexpr); }
 	|	prlist ',' STRING { code2(prexpr, (Inst)$3); }
 	;
-defn:		FUNC procname { $2->type = FUNCTION; indef = 1; }
+DEF:		FUNC procname { $2->type = FUNCTION; indef = 1; }
 		'(' ')' stmt { code(procret); define($2); indef = 0; }
 	|	PROC procname { $2->type = PROCEDURE; indef = 1; }
 		'(' ')' stmt { code(procret); define($2); indef = 0; }
