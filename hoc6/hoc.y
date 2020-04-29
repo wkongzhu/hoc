@@ -43,7 +43,7 @@ extern void define(Symbol *sp);
 list:  /* 	nothing */
 	| 	list '\n'
 	|	list DEF '\n' // do nothing
-	|	list asgn '\n'  { code2((Inst)pop, STOP); return 1;} // yyparse()返回之后，才开始执行指令数组
+	|	list asgn '\n'  { code2(popm, STOP); return 1;} // yyparse()返回之后，才开始执行指令数组
 	|	list stmt '\n'  { code(STOP); return 1;}
 	| 	list expr '\n'  { code2(print, STOP); return 1; }
 	|	list error '\n' { yyerror; }
@@ -51,7 +51,7 @@ list:  /* 	nothing */
 asgn:		VAR '=' expr    { $$=$3; code3(varpush, (Inst) $1, assign); }
 	|	ARG '=' expr  { defnonly("$"); code2(argassign, (Inst)$1); $$=$3; }
 	;
-stmt:		expr       { code((Inst) pop); }
+stmt:		expr       { code(popm); }
 	|	RETURN      { defnonly("return"); code(procret); }
 	|	RETURN expr { defnonly("return"); code(funcret); $$ = $2; }
 	|	PROCEDURE begin '(' arglist ')' { $$=$2; code3(call, (Inst)$1, (Inst)$4); } //进程调用

@@ -37,16 +37,15 @@ void initcode(){ // 重设栈指针和指令产生指针
   returning = 0;
 }
 
-void push(Datum d){
-  if(stackp >= &stack[NSTACK])   execerror("stack overflow", (char *) 0);
+/* void push(Datum d){ */
+/*   if(stackp >= &stack[NSTACK])   execerror("stack overflow", (char *) 0); */
 
-  *stackp++ = d;
-}
+/*   *stackp++ = d; */
+/* } */
 
-Datum pop() {
+void popm() {
   if(stackp <= stack)   execerror("stack underflow", (char*) 0);
-
-  return * --stackp;
+  stackp--;
 }
 
 Inst *code(Inst f){

@@ -3,7 +3,7 @@ OBJS := hoc.o init.o math.o symbol.o code.o
 CC := gcc 
 
 hoc6 : $(OBJS)
-	$(CC) $(OBJS)  -o $@
+	$(CC) $(OBJS) -lm -o $@
 
 hoc.o code.o init.o symbol.o : hoc.h
 
